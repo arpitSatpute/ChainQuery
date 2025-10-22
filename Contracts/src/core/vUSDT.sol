@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
+import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 
-contract VirtualUSDT is ERC20, Ownable {
+contract vUSDT is ERC20, Ownable {
     uint256 public constant AIRDROP_AMOUNT = 10_000e18;
 
     // Track which addresses have already claimed their limited mint
