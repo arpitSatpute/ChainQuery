@@ -24,6 +24,7 @@ import {
   SearchIcon,
 } from "@/components/icons";
 import { Logo } from "@/components/icons";
+import { WalletConnectButton } from "@/components/ThirdwebComponents/WallectConnectButton";
 
 export const Navbar = () => {
   const searchInput = (
@@ -96,16 +97,7 @@ export const Navbar = () => {
         </NavbarItem>
         <NavbarItem className="hidden lg:flex">{searchInput}</NavbarItem>
         <NavbarItem className="hidden md:flex">
-          <Button
-            isExternal
-            as={Link}
-            className="text-sm font-normal text-default-600 bg-default-100"
-            href={siteConfig.links.sponsor}
-            startContent={<HeartFilledIcon className="text-danger" />}
-            variant="flat"
-          >
-            Sponsor
-          </Button>
+          <WalletConnectButton />
         </NavbarItem>
       </NavbarContent>
 

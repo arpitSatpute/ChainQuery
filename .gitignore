@@ -16,3 +16,6 @@ yarn-error.log*
 pnpm-debug.log*
 package-lock.json
 /.pnp.*
+**/broadcast/
+**/cache/
+broadcast/
