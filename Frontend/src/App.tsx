@@ -1,29 +1,33 @@
 import { Route, Routes } from "react-router-dom";
 
 import IndexPage from "@/pages/index";
-import DocsPage from "@/pages/docs";
-import PricingPage from "@/pages/pricing";
-import BlogPage from "@/pages/blog";
+import Pools from "@/pages/Pools";
 import AboutPage from "@/pages/about";
-import { ThirdwebProvider } from "thirdweb/react";
+import { WagmiProvider } from "wagmi";
+import { config } from "./config/config";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-
+import Airdrop from "@/pages/Airdrop";
+import Vault from "@/pages/Vault";
+import { ThirdwebProvider } from "@thirdweb-dev/react";
 
 const queryClient = new QueryClient();
 
 function App() {
   return (
-    <ThirdwebProvider>
-      <QueryClientProvider client={queryClient}>
-        <Routes>
-          <Route element={<IndexPage />} path="/" />
-          <Route element={<DocsPage />} path="/docs" />
-          <Route element={<PricingPage />} path="/pricing" />
-          <Route element={<BlogPage />} path="/blog" />
-          <Route element={<AboutPage />} path="/about" />
-        </Routes>
-      </QueryClientProvider>
-  </ThirdwebProvider>
+    <WagmiProvider config={config}>
+      <ThirdwebProvider>
+        <QueryClientProvider client={queryClient}>
+          <Routes>
+            <Route element={<IndexPage />} path="/" />
+            <Route element={<Airdrop />} path="/airdrop" />
+            <Route element={<Pools />} path="/pools" />
+            <Route element={<Vault />} path="/vault" />
+            <Route element={<AboutPage />} path="/about" />
+          </Routes>
+        </QueryClientProvider>
+      </ThirdwebProvider>
+    </WagmiProvider>
+      
   );
 }
 

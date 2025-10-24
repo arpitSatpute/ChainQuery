@@ -20,13 +20,17 @@ import {
   TwitterIcon,
   GithubIcon,
   DiscordIcon,
-  HeartFilledIcon,
   SearchIcon,
 } from "@/components/icons";
 import { Logo } from "@/components/icons";
-import { WalletConnectButton } from "@/components/ThirdwebComponents/WallectConnectButton";
+import { useAccount, useConnect } from "wagmi";
+import { disconnect } from "wagmi/actions";
+import { config } from "@/config/config";
 
 export const Navbar = () => {
+  const { connect, connectors } = useConnect();
+  const { address } = useAccount();
+
   const searchInput = (
     <Input
       aria-label="Search"
@@ -58,7 +62,7 @@ export const Navbar = () => {
             href="/"
           >
             <Logo />
-            <p className="font-bold text-inherit">ACME</p>
+            <p className="font-bold text-inherit">InsightYield</p>
           </Link>
         </NavbarBrand>
         <div className="hidden lg:flex gap-4 justify-start ml-2">
@@ -95,9 +99,18 @@ export const Navbar = () => {
           </Link>
           <ThemeSwitch />
         </NavbarItem>
-        <NavbarItem className="hidden lg:flex">{searchInput}</NavbarItem>
+        {(!address) ? (
+          <Button
+            onPress={() => connect({ connector: connectors[0] })}
+          >
+            Connect Wallet
+          </Button>
+        ) : (
+          <Button onPress={() => disconnect(config)} className="bg-dark">
+            {address.slice(0, 6) + "..." + address.slice(-4)}
+          </Button>
+        )}
         <NavbarItem className="hidden md:flex">
-          <WalletConnectButton />
         </NavbarItem>
       </NavbarContent>
 
