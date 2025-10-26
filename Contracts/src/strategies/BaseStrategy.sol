@@ -26,12 +26,10 @@ abstract contract BaseStrategy is ERC4626, Ownable, ReentrancyGuard {
         _;
     }
 
-    constructor(
-        IERC20 _asset,
-        string memory _name,
-        string memory _symbol,
-        uint256 _baseAPY
-    ) ERC4626(_asset) ERC20(_name, _symbol) Ownable(msg.sender) {
+    constructor(IERC20 _asset, string memory _name, string memory _symbol, uint256 _baseAPY) 
+        ERC4626(_asset) ERC20(_name, _symbol) 
+        Ownable(msg.sender) 
+    {
         require(_baseAPY > 0 && _baseAPY < 50000, "BaseStrategy: Invalid APY");
         baseAPY = _baseAPY;
         lastYieldUpdate = block.timestamp;
