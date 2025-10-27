@@ -5,8 +5,8 @@ import { useAccount, useConnect, useDisconnect } from "wagmi";
 import { readContract, writeContract, waitForTransactionReceipt } from "wagmi/actions";
 import { useState } from "react";
 
-import vUSDTABI from "../abis/vUSDTABI.json"
-import VaultABI from "../abis/VaultABI.json"
+import vUSDTABI from "../abis/vUSDTAbi.json"
+// import VaultABI from "../abis/VaultABI.json"
 
 
 
@@ -72,22 +72,7 @@ export default function Airdrop() {
     }
   };
 
-  const loadBalances = async () => {
-    if (!address) return;
-    try {
-      const vusdtBalance = await readContract(config, {
-        address: VAULT_ADDRESS,
-        abi: VaultABI,
-        functionName: "getBalance",
-        args: [address],
-      }) as any;
-
-      console.log("vUSDT Balance:",vusdtBalance);
-    } catch (err) {
-      console.error("Failed to load balances:", err);
-    }
-  }
-
+  
   return (
     <DefaultLayout>
       <section className="flex flex-col items-center justify-center gap-4 py-8 md:py-10">
@@ -129,13 +114,6 @@ export default function Airdrop() {
         </div>
 
         <br />
-        <button
-          onClick={loadBalances}
-          disabled={!address || loading}
-          className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
-        >
-          Load Balances
-        </button>
 
         {(address) && (
           <button

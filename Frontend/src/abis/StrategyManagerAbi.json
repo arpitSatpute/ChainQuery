@@ -1,12 +1,6 @@
 [
 	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "_vUSDT",
-				"type": "address"
-			}
-		],
+		"inputs": [],
 		"stateMutability": "nonpayable",
 		"type": "constructor"
 	},
@@ -33,65 +27,22 @@
 		"type": "error"
 	},
 	{
-		"inputs": [],
-		"name": "ReentrancyGuardReentrantCall",
-		"type": "error"
-	},
-	{
 		"anonymous": false,
 		"inputs": [
 			{
 				"indexed": true,
-				"internalType": "address",
-				"name": "user",
-				"type": "address"
+				"internalType": "uint256",
+				"name": "index",
+				"type": "uint256"
 			},
 			{
 				"indexed": false,
 				"internalType": "uint256",
-				"name": "amount",
+				"name": "newAllocation",
 				"type": "uint256"
 			}
 		],
-		"name": "CollateralLocked",
-		"type": "event"
-	},
-	{
-		"anonymous": false,
-		"inputs": [
-			{
-				"indexed": true,
-				"internalType": "address",
-				"name": "user",
-				"type": "address"
-			},
-			{
-				"indexed": false,
-				"internalType": "uint256",
-				"name": "amount",
-				"type": "uint256"
-			}
-		],
-		"name": "CollateralUnlocked",
-		"type": "event"
-	},
-	{
-		"anonymous": false,
-		"inputs": [
-			{
-				"indexed": true,
-				"internalType": "address",
-				"name": "user",
-				"type": "address"
-			},
-			{
-				"indexed": false,
-				"internalType": "uint256",
-				"name": "amount",
-				"type": "uint256"
-			}
-		],
-		"name": "Deposited",
+		"name": "AllocationUpdated",
 		"type": "event"
 	},
 	{
@@ -119,58 +70,113 @@
 			{
 				"indexed": true,
 				"internalType": "address",
-				"name": "user",
+				"name": "strategy",
 				"type": "address"
 			},
 			{
 				"indexed": false,
 				"internalType": "uint256",
-				"name": "amount",
+				"name": "allocation",
 				"type": "uint256"
 			}
 		],
-		"name": "Withdrawn",
+		"name": "StrategyAdded",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "strategy",
+				"type": "address"
+			},
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "index",
+				"type": "uint256"
+			}
+		],
+		"name": "StrategyRemoved",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "strategy",
+				"type": "address"
+			},
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "newAllocation",
+				"type": "uint256"
+			}
+		],
+		"name": "StrategyUpdated",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "vault",
+				"type": "address"
+			}
+		],
+		"name": "VaultSet",
 		"type": "event"
 	},
 	{
 		"inputs": [
 			{
+				"internalType": "address",
+				"name": "_strategy",
+				"type": "address"
+			},
+			{
 				"internalType": "uint256",
-				"name": "_amount",
+				"name": "_allocation",
 				"type": "uint256"
 			}
 		],
-		"name": "deposit",
+		"name": "addStrategy",
 		"outputs": [],
 		"stateMutability": "nonpayable",
 		"type": "function"
 	},
 	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "_user",
-				"type": "address"
-			}
-		],
-		"name": "getBalance",
+		"inputs": [],
+		"name": "getActiveStrategies",
 		"outputs": [
 			{
 				"components": [
 					{
-						"internalType": "uint256",
-						"name": "lockedBalance",
-						"type": "uint256"
+						"internalType": "address",
+						"name": "strategy",
+						"type": "address"
 					},
 					{
 						"internalType": "uint256",
-						"name": "availableBalance",
+						"name": "allocation",
 						"type": "uint256"
+					},
+					{
+						"internalType": "bool",
+						"name": "active",
+						"type": "bool"
 					}
 				],
-				"internalType": "struct Vault.UserData",
+				"internalType": "struct StrategyManager.StrategyInfo[]",
 				"name": "",
-				"type": "tuple"
+				"type": "tuple[]"
 			}
 		],
 		"stateMutability": "view",
@@ -179,19 +185,56 @@
 	{
 		"inputs": [
 			{
+				"internalType": "uint256",
+				"name": "index",
+				"type": "uint256"
+			}
+		],
+		"name": "getStrategy",
+		"outputs": [
+			{
 				"internalType": "address",
-				"name": "_user",
+				"name": "strategy",
 				"type": "address"
 			},
 			{
 				"internalType": "uint256",
-				"name": "_amount",
+				"name": "allocation",
+				"type": "uint256"
+			},
+			{
+				"internalType": "bool",
+				"name": "active",
+				"type": "bool"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "getStrategyCount",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
 				"type": "uint256"
 			}
 		],
-		"name": "lockCollateral",
-		"outputs": [],
-		"stateMutability": "nonpayable",
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "getTotalAllocation",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
 		"type": "function"
 	},
 	{
@@ -208,10 +251,65 @@
 		"type": "function"
 	},
 	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "index",
+				"type": "uint256"
+			}
+		],
+		"name": "removeStrategy",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
 		"inputs": [],
 		"name": "renounceOwnership",
 		"outputs": [],
 		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "_vault",
+				"type": "address"
+			}
+		],
+		"name": "setVault",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"name": "strategies",
+		"outputs": [
+			{
+				"internalType": "address",
+				"name": "strategy",
+				"type": "address"
+			},
+			{
+				"internalType": "uint256",
+				"name": "allocation",
+				"type": "uint256"
+			},
+			{
+				"internalType": "bool",
+				"name": "active",
+				"type": "bool"
+			}
+		],
+		"stateMutability": "view",
 		"type": "function"
 	},
 	{
@@ -230,69 +328,32 @@
 	{
 		"inputs": [
 			{
-				"internalType": "address",
-				"name": "_user",
-				"type": "address"
+				"internalType": "uint256",
+				"name": "index",
+				"type": "uint256"
 			},
 			{
 				"internalType": "uint256",
-				"name": "_amount",
+				"name": "newAllocation",
 				"type": "uint256"
 			}
 		],
-		"name": "unlockCollateral",
+		"name": "updateAllocation",
 		"outputs": [],
 		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "",
-				"type": "address"
-			}
-		],
-		"name": "userData",
-		"outputs": [
-			{
-				"internalType": "uint256",
-				"name": "lockedBalance",
-				"type": "uint256"
-			},
-			{
-				"internalType": "uint256",
-				"name": "availableBalance",
-				"type": "uint256"
-			}
-		],
-		"stateMutability": "view",
 		"type": "function"
 	},
 	{
 		"inputs": [],
-		"name": "vUSDT",
+		"name": "vault",
 		"outputs": [
 			{
-				"internalType": "contract IERC20",
+				"internalType": "address",
 				"name": "",
 				"type": "address"
 			}
 		],
 		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "uint256",
-				"name": "_amount",
-				"type": "uint256"
-			}
-		],
-		"name": "withdraw",
-		"outputs": [],
-		"stateMutability": "nonpayable",
 		"type": "function"
 	}
 ]
