@@ -24,7 +24,6 @@ export default function Airdrop() {
   const { disconnect } = useDisconnect();
 
   const VUSDT_ADDRESS = import.meta.env.VITE_VUSDT_ADDRESS as `0x${string}`;
-  const VAULT_ADDRESS = import.meta.env.VITE_VAULT_ADDRESS as `0x${string}`;
   
   const handleAirdrop = async () => {
     if (!address) return;

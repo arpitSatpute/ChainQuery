@@ -1,4 +1,3 @@
-import { Button } from "@heroui/button";
 import { Kbd } from "@heroui/kbd";
 import { Link } from "@heroui/link";
 import { Input } from "@heroui/input";
@@ -23,14 +22,18 @@ import {
   SearchIcon,
 } from "@/components/icons";
 import { Logo } from "@/components/icons";
-import { useAccount, useConnect } from "wagmi";
-import { disconnect } from "wagmi/actions";
-import { config } from "@/config/config";
+import { ConnectButton } from "thirdweb/react";
+import { client } from "@/config/thirdWeb";
+import { createWallet } from "thirdweb/wallets";
 
 export const Navbar = () => {
-  const { connect, connectors } = useConnect();
-  const { address } = useAccount();
-
+  const wallets = [
+    createWallet("io.metamask"),
+    createWallet("com.coinbase.wallet"),
+    createWallet("me.rainbow"),
+    createWallet("io.rabby"),
+    createWallet("io.zerion.wallet"),
+  ];
   const searchInput = (
     <Input
       aria-label="Search"
@@ -62,7 +65,7 @@ export const Navbar = () => {
             href="/"
           >
             <Logo />
-            <p className="font-bold text-inherit">InsightYield</p>
+            <p className="font-bold text-inherit">ACME</p>
           </Link>
         </NavbarBrand>
         <div className="hidden lg:flex gap-4 justify-start ml-2">
@@ -71,7 +74,7 @@ export const Navbar = () => {
               <Link
                 className={clsx(
                   linkStyles({ color: "foreground" }),
-                  "data-[active=true]:text-primary data-[active=true]:font-medium",
+                  "data-[active=true]:text-primary data-[active=true]:font-medium"
                 )}
                 color="foreground"
                 href={item.href}
@@ -99,18 +102,30 @@ export const Navbar = () => {
           </Link>
           <ThemeSwitch />
         </NavbarItem>
-        {(!address) ? (
-          <Button
-            onPress={() => connect({ connector: connectors[0] })}
-          >
-            Connect Wallet
-          </Button>
-        ) : (
-          <Button onPress={() => disconnect(config)} className="bg-dark">
-            {address.slice(0, 6) + "..." + address.slice(-4)}
-          </Button>
-        )}
+        <NavbarItem className="hidden lg:flex">{searchInput}</NavbarItem>
         <NavbarItem className="hidden md:flex">
+            {/* <WalletConnectButton /> */}
+            <ConnectButton
+                    client={client}
+                    wallets={wallets}
+                    theme="dark"
+                    connectButton={{
+                      label: "Connect",
+                      style: {
+                        backgroundColor: "#242424ff",
+                        borderRadius: "8px",
+                        fontWeight: "400",
+                        transition: "all 0.3s ease",
+                        color: "#fff",
+                      },
+                    }}
+                    connectModal={{
+                      title: "Select a Wallet",
+                      showThirdwebBranding: false,
+                      termsOfServiceUrl: "/terms",
+                      privacyPolicyUrl: "/privacy",
+                    }}
+                  />
         </NavbarItem>
       </NavbarContent>
 

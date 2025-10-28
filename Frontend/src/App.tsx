@@ -8,7 +8,8 @@ import { config } from "./config/config";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import Airdrop from "@/pages/Airdrop";
 import Vault from "@/pages/Vault";
-import { ThirdwebProvider } from "@thirdweb-dev/react";
+import { ThirdwebProvider } from "thirdweb/react";
+// import { client } from "./config/ThirdWeb";
 
 const queryClient = new QueryClient();
 

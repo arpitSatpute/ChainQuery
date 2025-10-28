@@ -1,12 +1,243 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Wallet, ArrowDownCircle, ArrowUpCircle, Gift, TrendingUp, Shield } from "lucide-react";
 import { useAccount, useConnect } from "wagmi";
 import DefaultLayout from "@/layouts/default";
+import { readContract, writeContract, waitForTransactionReceipt } from "wagmi/actions";
+import { config } from "@/config/config";
+import vUSDTABI from "../abis/vUSDTAbi.json"
+import yieldVaultAbi from "../abis/YieldVaultAbi.json";
+import { parseUnits } from "ethers/lib/utils";
+import { formatUnits } from "viem";
+import { parse } from "path";
 
 export default function Vault() {
   const { address, isConnected } = useAccount();
-  const { connect } = useConnect();
+  const { connect, connectors } = useConnect();
   const [airdropClaimed, setAirdropClaimed] = useState(false);
+  const VUSDT_ADDRESS = import.meta.env.VITE_VUSDT_ADDRESS as `0x${string}`;
+  const YIELD_VAULT_ADDRESS = import.meta.env.VITE_YIELD_VAULT_ADDRESS as `0x${string}`;
+  const [hash, setHash] = useState<string | null>(null);
+  const [vaultBalance, setVaultBalance] = useState<string>("");
+  const [depositAmount, setDepositAmount] = useState<string>("");
+  const [withdrawAmount, setWithdrawAmount] = useState<string>("");
+  const [vUSDTBalance, setVUSDTBalance] = useState<string>("0");
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (!address) {
+      setAirdropClaimed(false);
+      return;
+    }
+
+    let mounted = true;
+
+    const fetchBalance = async () => {
+      try {
+        console.log("Fetching balance for address:", address);
+        const balance = await readContract(config, {
+          address: VUSDT_ADDRESS,
+          abi: vUSDTABI,
+          functionName: "balanceOf",
+          args: [address],
+        }) as bigint;
+
+        const formatted = formatUnits(balance, 18);
+        if (mounted) setVUSDTBalance(formatted);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
+    const fetchVaultBalance = async () => {
+      try {
+        console.log("Fetching vault balance");
+        const balance = await readContract(config, {
+          address: YIELD_VAULT_ADDRESS,
+          abi: yieldVaultAbi,
+          functionName: "totalAssets",
+          args: [],
+        }) as bigint;
+        setVaultBalance(formatUnits(balance, 18));
+        console.log("Vault Balance:", balance);
+      }
+      catch (err) {
+        console.error(err);
+      }
+    }
+    
+    const fetchClaimed = async () => {
+      try {
+        const hasClaimed = await readContract(config, {
+          address: VUSDT_ADDRESS,
+          abi: vUSDTABI,
+          functionName: "hasClaimed",
+          args: [address],
+        }) as boolean;
+        
+        if (mounted) setAirdropClaimed(hasClaimed);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+    
+    fetchBalance();
+    fetchVaultBalance();
+    fetchClaimed();
+
+    return () => {
+      mounted = false;
+    };
+  }, [address]);
+ 
+  const handleAirdrop = async () => {
+    console.log("Airdrop button clicked");
+    if (!address) return;
+    
+    try {
+      const hasClaimed = await readContract(config, {
+        address: VUSDT_ADDRESS,
+        abi: vUSDTABI,
+        functionName: "hasClaimed",
+        args: [address],
+      }) as boolean;
+
+      if (hasClaimed) {
+        setAirdropClaimed(true);
+        return;
+      }
+
+      const tx = await writeContract(config, {
+        address: VUSDT_ADDRESS,
+        abi: vUSDTABI,
+        functionName: "airdrop",
+      });
+
+      setHash(tx);
+      const receipt = await waitForTransactionReceipt(config, { hash: tx });
+
+      if (receipt.status === "success") {
+        setAirdropClaimed(true);
+      }
+    } catch (err: any) {
+      console.error(err);
+    }
+  };
+
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement>,
+    setter: (value: string) => void
+  ) => {
+    setter(e.target.value);
+  };
+
+  const depositToVault = async () => {
+  if (!depositAmount || !address) return;
+  
+  setIsLoading(true);
+  setHash("Approving vUSDT...");
+  
+  try {
+    // Step 1: Approve vUSDT spending
+    const approvalAmount = parseUnits(depositAmount, 18);
+    
+    const approveTx = await writeContract(config, {
+      address: VUSDT_ADDRESS,
+      abi: vUSDTABI,
+      functionName: "approve",
+      args: [YIELD_VAULT_ADDRESS, approvalAmount],
+    });
+
+    console.log("Approval tx:", approveTx);
+    
+    const approvalReceipt = await waitForTransactionReceipt(config, { 
+      hash: approveTx,
+      timeout: 60000,
+    });
+
+    if (approvalReceipt.status !== "success") {
+      setHash("Approval failed!");
+      setIsLoading(false);
+      return;
+    }
+
+    console.log("Approval successful");
+    setHash("Depositing to vault...");
+
+    // Step 2: Deposit to vault
+    const depositTx = await writeContract(config, {
+      address: YIELD_VAULT_ADDRESS,
+      abi: yieldVaultAbi,
+      functionName: "deposit",
+      args: [approvalAmount, address],
+    });
+
+    console.log("Deposit tx:", depositTx);
+    setHash(depositTx);
+
+    const depositReceipt = await waitForTransactionReceipt(config, { 
+      hash: depositTx,
+      timeout: 60000,
+    });
+
+    if (depositReceipt.status === "success") {
+      setDepositAmount("");
+      setHash("✓ Deposit successful!");
+      
+      // Refetch balances after 2 seconds
+      setTimeout(() => {
+        window.location.reload();
+      }, 2000);
+    } else {
+      setHash("Deposit failed!");
+    }
+  } catch (err: any) {
+    console.error("Deposit error:", err);
+    setHash(`✗ Error: ${err?.message || "Transaction failed"}`);
+  } finally {
+    setIsLoading(false);
+  }
+};
+
+const withdrawFromVault = async () => {
+  if (!withdrawAmount || !address) return;
+  
+  setIsLoading(true);
+  setHash("Processing withdrawal...");
+  
+  try {
+    const withdrawTx = await writeContract(config, {
+      address: YIELD_VAULT_ADDRESS,
+      abi: yieldVaultAbi,
+      functionName: "withdraw",
+      args: [parseUnits(withdrawAmount, 18), address, address],
+    });
+
+    console.log("Withdraw tx:", withdrawTx);
+    setHash(withdrawTx);
+
+    const withdrawReceipt = await waitForTransactionReceipt(config, { 
+      hash: withdrawTx,
+      timeout: 60000,
+    });
+
+    if (withdrawReceipt.status === "success") {
+      setWithdrawAmount("");
+      setHash("✓ Withdrawal successful!");
+      
+      setTimeout(() => {
+        window.location.reload();
+      }, 2000);
+    } else {
+      setHash("Withdrawal failed!");
+    }
+  } catch (err: any) {
+    console.error("Withdraw error:", err);
+    setHash(`✗ Error: ${err?.message || "Transaction failed"}`);
+  } finally {
+    setIsLoading(false);
+  }
+};
+  
 
   if (!isConnected) {
     return (
@@ -20,12 +251,9 @@ export default function Vault() {
           </div>
           <h1 className="text-3xl font-bold text-white mb-3">Vault</h1>
           <p className="text-gray-400 mb-6">Connect your wallet to access the vault</p>
-          <button
-            onClick={() => connect()}
-            className="px-8 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-all"
-          >
-            Connect Wallet
-          </button>
+            <button onClick={() => connect({ connector: connectors[0] })} className="w-full px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-all">
+              Connect Wallet
+            </button>
         </div>
       </div>
       </DefaultLayout>
@@ -56,7 +284,7 @@ export default function Vault() {
               </div>
               <p className="text-sm text-gray-400">Vault Balance</p>
             </div>
-            <p className="text-3xl font-bold text-white mb-1">0.00</p>
+            <p className="text-3xl font-bold text-white mb-1">{parseFloat(vaultBalance).toFixed(2)}</p>
             <p className="text-sm text-gray-500">vUSDT</p>
           </div>
 
@@ -67,7 +295,7 @@ export default function Vault() {
               </div>
               <p className="text-sm text-gray-400">Available Balance</p>
             </div>
-            <p className="text-3xl font-bold text-white mb-1">0.00</p>
+            <p className="text-3xl font-bold text-white mb-1">{parseFloat(vUSDTBalance).toFixed(2)}</p>
             <p className="text-sm text-gray-500">vUSDT</p>
           </div>
 
@@ -99,10 +327,16 @@ export default function Vault() {
                   type="number"
                   placeholder="0.00"
                   className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:border-blue-600 text-white text-lg placeholder-gray-600 transition-all"
+                  value={depositAmount}
+                  onChange={(e) => handleInputChange(e, setDepositAmount)}
                 />
               </div>
-              <button className="w-full px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-all">
-                Deposit
+              <button 
+                onClick={depositToVault} 
+                disabled={isLoading || !depositAmount}
+                className="w-full px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+              >
+                {isLoading ? "Processing..." : "Deposit"}
               </button>
             </div>
           </div>
@@ -122,14 +356,28 @@ export default function Vault() {
                   type="number"
                   placeholder="0.00"
                   className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:border-red-600 text-white text-lg placeholder-gray-600 transition-all"
+                  value={withdrawAmount}
+                  onChange={(e) => handleInputChange(e, setWithdrawAmount)}
                 />
               </div>
-              <button className="w-full px-6 py-3 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 transition-all">
+              <button onClick={withdrawFromVault} className="w-full px-6 py-3 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 transition-all">
                 Withdraw
               </button>
             </div>
           </div>
         </div>
+
+        {hash && (
+          <div className={`p-4 rounded-lg text-center font-medium mb-6 ${
+            hash.includes("✗")
+              ? "bg-red-900/30 text-red-300 border border-red-700/50"
+              : hash.includes("✓")
+              ? "bg-emerald-900/30 text-emerald-300 border border-emerald-700/50"
+              : "bg-blue-900/30 text-blue-300 border border-blue-700/50"
+          }`}>
+            {hash}
+          </div>
+        )}
 
         {/* Airdrop Section */}
         <div className="bg-gray-900 rounded-xl p-8 border border-gray-800 hover:border-purple-700/50 transition-all mb-6">
@@ -165,6 +413,7 @@ export default function Vault() {
           </div>
 
           <button
+            onClick={handleAirdrop}
             disabled={airdropClaimed}
             className="w-full px-8 py-3 bg-purple-600 text-white rounded-lg font-semibold hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
           >
