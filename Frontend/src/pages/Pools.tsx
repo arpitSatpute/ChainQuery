@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { title } from "@/components/primitives";
 import DefaultLayout from "@/layouts/default";
 import { Button } from "@heroui/button";
-import { Card, CardBody, CardHeader } from "@heroui/card";
+// import { Card, CardBody, CardHeader } from "@heroui/card";
 import { readContract } from "wagmi/actions";
 import { config } from "@/config/config";
 import YieldVaultAbi from "../abis/YieldVaultAbi.json";
@@ -328,12 +328,16 @@ export default function PoolsPage() {
               <div>
                 <p className="text-gray-400 text-sm mb-2">Weighted Average APY</p>
                 <p className="text-3xl font-bold text-white">
-                  {(
-                    (Number(poolData.lending.assets) * Number(poolData.lending.apy) +
-                      Number(poolData.staking.assets) * Number(poolData.staking.apy) +
-                      Number(poolData.liquidity.assets) * Number(poolData.liquidity.apy)) /
-                    (Number(poolData.lending.assets) + Number(poolData.staking.assets) + Number(poolData.liquidity.assets))
-                  ).toFixed(2)}
+                  {(() => {
+                    const total = Number(poolData.lending.assets) + Number(poolData.staking.assets) + Number(poolData.liquidity.assets);
+                    if (total === 0) return "0.00";
+                    return (
+                      (Number(poolData.lending.assets) * Number(poolData.lending.apy) +
+                        Number(poolData.staking.assets) * Number(poolData.staking.apy) +
+                        Number(poolData.liquidity.assets) * Number(poolData.liquidity.apy)) /
+                      total
+                    ).toFixed(2);
+                  })()}
                   <span className="text-lg text-gray-400 ml-2">%</span>
                 </p>
               </div>

@@ -8,7 +8,7 @@ import vUSDTABI from "../abis/vUSDTAbi.json"
 import yieldVaultAbi from "../abis/YieldVaultAbi.json";
 import { parseUnits } from "ethers/lib/utils";
 import { formatUnits } from "viem";
-import { parse } from "path";
+// import { parse } from "path";
 
 export default function Vault() {
   const { address, isConnected } = useAccount();
@@ -397,7 +397,7 @@ const withdrawFromVault = async () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-gray-400 text-sm mb-1">Available Reward</p>
-                <p className="text-3xl font-bold text-white">100 <span className="text-lg text-gray-400">vUSDT</span></p>
+                <p className="text-3xl font-bold text-white">10000 <span className="text-lg text-gray-400">vUSDT</span></p>
               </div>
               <div className="text-right">
                 <p className="text-gray-400 text-sm mb-1">Status</p>

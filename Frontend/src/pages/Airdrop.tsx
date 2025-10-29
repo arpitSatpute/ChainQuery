@@ -1,128 +1,163 @@
-
 import { title } from "@/components/primitives";
 import DefaultLayout from "@/layouts/default";
-import { useAccount, useConnect, useDisconnect } from "wagmi";
-import { readContract, writeContract, waitForTransactionReceipt } from "wagmi/actions";
-import { useState } from "react";
-
-import vUSDTABI from "../abis/vUSDTAbi.json"
-// import VaultABI from "../abis/VaultABI.json"
-
-
-
-import { config } from "@/config/config";
 import { Button } from "@heroui/button";
+import { waitForTransactionReceipt, writeContract, readContract } from "@wagmi/core";
+import { config } from "@/config/config";
+import YieldVaultAbi from "../abis/YieldVaultAbi.json";
+import LendingStrategyAbi from "../abis/LendingStrategyAbi.json";
+import StakingStrategyAbi from "../abis/StakingStrategyAbi.json";
+import LiquidityStrategyAbi from "../abis/LiquidityStrategyAbi.json";
+import { parseUnits } from "ethers/lib/utils";
+import vUSDTAbi from "../abis/vUSDTAbi.json";
+
+export default function DocsPage() {
+
+  const YIELD_VAULT_ADDRESS = import.meta.env.VITE_YIELD_VAULT_ADDRESS; // Replace with actual address
+  const LENDING_STRATEGY_ADDRESS = import.meta.env.VITE_LENDING_STRATEGY_ADDRESS; // Replace with actual address
+  const STAKIING_STRATEGY_ADDRESS = import.meta.env.VITE_STAKING_STRATEGY_ADDRESS; // Replace with actual address
+  const LIQUIDITY_STRATEGY_ADDRESS = import.meta.env.VITE_LIQUIDITY_STRATEGY_ADDRESS; // Replace with actual address
+  const VUSDTADDRESS = import.meta.env.VITE_VUSDT_ADDRESS; // Replace with actual address
 
 
-export default function Airdrop() {
-  const { address } = useAccount();
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [hash, setHash] = useState<string | null>(null);
-  const [isSuccess, setIsSuccess] = useState(false);
-  const { connectors, connect } = useConnect();
-  const { disconnect } = useDisconnect();
-
-  const VUSDT_ADDRESS = import.meta.env.VITE_VUSDT_ADDRESS as `0x${string}`;
-  
-  const handleAirdrop = async () => {
-    if (!address) return;
-    
+  const handleRebalance = async () => {
+    // Logic for rebalancing the pool
     try {
-      setLoading(true);
-      setError(null);
-      setIsSuccess(false);
-      
-      // Check if user has already claimed
-      const hasClaimed = await readContract(config, {
-        address: VUSDT_ADDRESS,
-        abi: vUSDTABI,
-        functionName: "hasClaimed",
-        args: [address],
-      }) as boolean;
-
-      if (hasClaimed) {
-        setError("You have already claimed your airdrop!");
-        return;
-      }
-
-      // Execute airdrop transaction
-      const tx = await writeContract(config, {
-        address: VUSDT_ADDRESS,
-        abi: vUSDTABI,
-        functionName: "airdrop",
+      const tx = await writeContract( config,{
+        address: YIELD_VAULT_ADDRESS,
+        abi: YieldVaultAbi,
+        functionName: "rebalance",
+        args: [],
       });
 
-      setHash(tx);
+      const receipt = await waitForTransactionReceipt(config, { 
+        hash: tx,
+        timeout: 60000
+       });
 
-      // Wait for transaction confirmation
-      const receipt = await waitForTransactionReceipt(config, { hash: tx });
+       console.log("Rebalance transaction confirmed:", receipt);
 
-      if (receipt.status === "success") {
-        setIsSuccess(true);
-      } else {
-        setError("Airdrop transaction failed.");
-      }
-    } catch (err: any) {
-      console.error(err);
-      setError(err.message || "Airdrop failed.");
-    } finally {
-      setLoading(false);
+      console.log("Rebalance transaction submitted:", tx);
+    } catch (error) {
+      console.error("Error submitting rebalance transaction:", error);
     }
   };
 
-  
+  const getTotalAssets = async () => {
+    try{
+          const lendingAssets = await readContract( config,{
+            address: LENDING_STRATEGY_ADDRESS,
+            abi: LendingStrategyAbi,
+            functionName: "totalAssets",
+            args: [],
+          }) as Promise<number>;
+
+      console.log("Total Assets in Lending:", lendingAssets.toString());
+
+      const stakingAssets = await readContract( config,{
+        address: STAKIING_STRATEGY_ADDRESS,
+        abi: StakingStrategyAbi,
+        functionName: "totalAssets",
+        args: [],
+      }) as Promise<number>;
+
+      console.log("Total Assets in Staking:", stakingAssets.toString());
+
+      const liquidityAssets = await readContract( config,{
+        address: LIQUIDITY_STRATEGY_ADDRESS,
+        abi: LiquidityStrategyAbi,
+        functionName: "totalAssets",
+        args: [],
+      }) as Promise<number>;
+
+      console.log("Total Assets in Liquidity:", liquidityAssets.toString());
+
+    }
+
+    catch(error){
+      console.error("Error reading total assets:", error);
+    }
+  }
+
+  const getPoolApy = async () => {
+    try{
+      const lendingAPY = await readContract( config,{
+        address: LENDING_STRATEGY_ADDRESS,
+        abi: LendingStrategyAbi,
+        functionName: "estimatedAPY",
+        args: [],
+      }) as BigInt;
+
+      console.log("Pool APY:", (Number(lendingAPY) / 100).toString() + "%");
+
+      const liquidityAPY = await readContract( config,{
+        address: LIQUIDITY_STRATEGY_ADDRESS,
+        abi: LiquidityStrategyAbi,
+        functionName: "estimatedAPY",
+        args: [],
+      }) as BigInt;
+
+      console.log("Pool APY:", (Number(liquidityAPY) / 100).toString() + "%");
+
+      const stakingAPY = await readContract( config,{
+        address: STAKIING_STRATEGY_ADDRESS,
+        abi: StakingStrategyAbi,
+        functionName: "estimatedAPY",
+        args: [],
+      }) as BigInt;
+
+      console.log("Pool APY:", (Number(stakingAPY) / 100).toString() + "%");
+
+    }
+
+    catch(error){
+      console.error("Error reading pool APY:", error);
+    }
+  }
+
+  // const mintToYieldVault = async () => {
+  //   try {
+  //     const tx = await writeContract(config, {
+  //       address: VUSDTADDRESS,
+  //       abi: vUSDTAbi,
+  //       functionName: "mint",
+  //       args: [STAKIING_STRATEGY_ADDRESS, 100_000_000 * 1e18],
+  //       gas: 1_200_000n,
+  //     });
+
+  //     const receipt = await waitForTransactionReceipt(config, {
+  //       hash: tx,
+  //       timeout: 60000,
+  //     });
+
+  //     console.log("Mint to Vaults transaction confirmed:", receipt);
+  //   } catch (error) {
+  //     console.error("Error submitting Mint to Vaults transaction:", error);
+  //   }
+  // };
+
   return (
     <DefaultLayout>
       <section className="flex flex-col items-center justify-center gap-4 py-8 md:py-10">
-        <h1 className={title()}>Airdrop</h1>
-        
-        {(!address) ? (
-          <Button
-            onPress={() => connect({ connector: connectors[0] })}
-            className="px-4 py-2 bg-blue-600 text-white rounded"
-          >
-            Connect Wallet
-          </Button>
-        ) : (
-          address
-        )}
-
-        <div className="flex flex-col gap-4 w-full max-w-md">
-          <button
-            onClick={handleAirdrop}
-            disabled={!address || loading}
-            className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
-          >
-            {loading ? "Processing..." : "Airdrop USDT"}
-          </button>
-
-          {error && (
-            <div className="p-4 bg-red-100 border border-red-400 text-red-700 rounded">
-              <strong>Error:</strong> {error}
-            </div>
-          )}
-
-          {isSuccess && hash && (
-            <div className="p-4 bg-green-100 border border-green-400 text-green-700 rounded">
-              <strong>Success!</strong>
-              <br />
-              Transaction Hash: {hash}
-            </div>
-          )}
+        <div className="inline-block max-w-lg text-center justify-center">
+          <h1 className={title()}>Price</h1>
         </div>
+        <Button onPress={handleRebalance} size="lg" className="mt-6 bg-blue-600 hover:bg-blue-700 text-white ">
+          Rebalance
+        </Button>
 
-        <br />
+        <Button onPress={getTotalAssets} size="lg" className="mt-6 bg-green-600 hover:bg-green-700 text-white ">
+          Get Total Assets
+        </Button>
 
-        {(address) && (
-          <button
-            onClick={() => disconnect()}
-            className="px-4 py-2 bg-dark-600 text-white rounded"
-          >
-            Disconnect
-          </button>
-        )}
+        <Button onPress={getPoolApy} size="lg" className="mt-6 bg-gray-600 hover:bg-gray-700 text-white ">
+          View Pool APY
+        </Button>
+
+         {/* <Button onPress={mintToYieldVault} size="lg" className="mt-6 bg-red-600 hover:bg-red-700 text-white ">
+          Mint to Vaults
+        </Button> */}
       </section>
     </DefaultLayout>
   );
 }
+
