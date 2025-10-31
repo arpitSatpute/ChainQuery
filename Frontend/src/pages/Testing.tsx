@@ -9,6 +9,7 @@ import StakingStrategyAbi from "../abis/StakingStrategyAbi.json";
 import LiquidityStrategyAbi from "../abis/LiquidityStrategyAbi.json";
 import { parseUnits } from "ethers/lib/utils";
 import vUSDTAbi from "../abis/vUSDTAbi.json";
+import { useAccount } from "wagmi";
 
 export default function DocsPage() {
 
@@ -18,6 +19,7 @@ export default function DocsPage() {
   const LIQUIDITY_STRATEGY_ADDRESS = import.meta.env.VITE_LIQUIDITY_STRATEGY_ADDRESS; // Replace with actual address
   const VUSDTADDRESS = import.meta.env.VITE_VUSDT_ADDRESS; // Replace with actual address
 
+  const { address } = useAccount();
 
   const handleRebalance = async () => {
     // Logic for rebalancing the pool
@@ -114,26 +116,47 @@ export default function DocsPage() {
     }
   }
 
-  // const mintToYieldVault = async () => {
-  //   try {
-  //     const tx = await writeContract(config, {
-  //       address: VUSDTADDRESS,
-  //       abi: vUSDTAbi,
-  //       functionName: "mint",
-  //       args: [STAKIING_STRATEGY_ADDRESS, 100_000_000 * 1e18],
-  //       gas: 1_200_000n,
-  //     });
+  const mintToYieldVault = async () => {
+    try {
+      const tx = await writeContract(config, {
+        address: VUSDTADDRESS,
+        abi: vUSDTAbi,
+        functionName: "mint",
+        args: [YIELD_VAULT_ADDRESS, 100_000_000 * 1e18],
+        gas: 1_200_000n,
+      });
 
-  //     const receipt = await waitForTransactionReceipt(config, {
-  //       hash: tx,
-  //       timeout: 60000,
-  //     });
+      const receipt = await waitForTransactionReceipt(config, {
+        hash: tx,
+        timeout: 60000,
+      });
 
-  //     console.log("Mint to Vaults transaction confirmed:", receipt);
-  //   } catch (error) {
-  //     console.error("Error submitting Mint to Vaults transaction:", error);
-  //   }
-  // };
+      console.log("Mint to Vaults transaction confirmed:", receipt);
+    } catch (error) {
+      console.error("Error submitting Mint to Vaults transaction:", error);
+    }
+  };
+
+  const redeemShares = async () => {
+    try {
+      const tx = await writeContract(config, {
+        address: YIELD_VAULT_ADDRESS,
+        abi: YieldVaultAbi,
+        functionName: "redeem",
+        args: [parseUnits("500", 18), address, address],
+        gas: 1_200_000n,
+      });
+
+      const receipt = await waitForTransactionReceipt(config, {
+        hash: tx,
+        timeout: 60000,
+      });
+
+      console.log("Redeem transaction confirmed:", receipt);
+    } catch (error) {
+      console.error("Error submitting Redeem transaction:", error);
+    }
+  };
 
   return (
     <DefaultLayout>
@@ -152,10 +175,16 @@ export default function DocsPage() {
         <Button onPress={getPoolApy} size="lg" className="mt-6 bg-gray-600 hover:bg-gray-700 text-white ">
           View Pool APY
         </Button>
+        
+        <Button onPress={redeemShares} size="lg" className="mt-6 bg-gray-600 hover:bg-gray-700 text-white ">
+          Redeem
+        </Button>
 
-         {/* <Button onPress={mintToYieldVault} size="lg" className="mt-6 bg-red-600 hover:bg-red-700 text-white ">
+         <Button onPress={mintToYieldVault} size="lg" className="mt-6 bg-red-600 hover:bg-red-700 text-white ">
           Mint to Vaults
-        </Button> */}
+        </Button>
+
+
       </section>
     </DefaultLayout>
   );

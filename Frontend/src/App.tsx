@@ -6,7 +6,7 @@ import AboutPage from "@/pages/about";
 import { WagmiProvider } from "wagmi";
 import { config } from "./config/config";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import Airdrop from "@/pages/Airdrop";
+import Testing from "@/pages/Testing";
 import Vault from "@/pages/Vault";
 import { ThirdwebProvider } from "thirdweb/react";
 // import { client } from "./config/ThirdWeb";
@@ -20,7 +20,7 @@ function App() {
         <QueryClientProvider client={queryClient}>
           <Routes>
             <Route element={<IndexPage />} path="/" />
-            <Route element={<Airdrop />} path="/airdrop" />
+            <Route element={<Testing />} path="/testing" />
             <Route element={<Pools />} path="/pools" />
             <Route element={<Vault />} path="/vault" />
             <Route element={<AboutPage />} path="/about" />

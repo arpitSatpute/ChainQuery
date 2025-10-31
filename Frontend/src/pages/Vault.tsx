@@ -54,8 +54,8 @@ export default function Vault() {
         const balance = await readContract(config, {
           address: YIELD_VAULT_ADDRESS,
           abi: yieldVaultAbi,
-          functionName: "totalAssets",
-          args: [],
+          functionName: "balanceOf",
+          args: [address],
         }) as bigint;
         setVaultBalance(formatUnits(balance, 18));
         console.log("Vault Balance:", balance);
@@ -282,7 +282,7 @@ const withdrawFromVault = async () => {
               <div className="w-10 h-10 bg-blue-900/30 rounded-lg flex items-center justify-center border border-blue-700/50">
                 <TrendingUp className="w-5 h-5 text-blue-400" />
               </div>
-              <p className="text-sm text-gray-400">Vault Balance</p>
+              <p className="text-sm text-gray-400">Total Investment</p>
             </div>
             <p className="text-3xl font-bold text-white mb-1">{parseFloat(vaultBalance).toFixed(2)}</p>
             <p className="text-sm text-gray-500">vUSDT</p>
@@ -293,7 +293,7 @@ const withdrawFromVault = async () => {
               <div className="w-10 h-10 bg-emerald-900/30 rounded-lg flex items-center justify-center border border-emerald-700/50">
                 <Wallet className="w-5 h-5 text-emerald-400" />
               </div>
-              <p className="text-sm text-gray-400">Available Balance</p>
+              <p className="text-sm text-gray-400">Wallet Balance</p>
             </div>
             <p className="text-3xl font-bold text-white mb-1">{parseFloat(vUSDTBalance).toFixed(2)}</p>
             <p className="text-sm text-gray-500">vUSDT</p>
