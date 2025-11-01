@@ -8,6 +8,7 @@ import vUSDTABI from "../abis/vUSDTAbi.json"
 import yieldVaultAbi from "../abis/YieldVaultAbi.json";
 import { parseUnits } from "ethers/lib/utils";
 import { formatUnits } from "viem";
+import { parse } from "path";
 // import { parse } from "path";
 
 export default function Vault() {
@@ -22,6 +23,7 @@ export default function Vault() {
   const [withdrawAmount, setWithdrawAmount] = useState<string>("");
   const [vUSDTBalance, setVUSDTBalance] = useState<string>("0");
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [share, setShare] = useState<string>("");
 
   useEffect(() => {
     if (!address) {
@@ -47,23 +49,39 @@ export default function Vault() {
         console.error(err);
       }
     };
+const fetchVaultBalance = async () => {
+  try {
+    console.log("Fetching vault balance");
+    
+    // Fetch shares (balanceOf vault tokens)
+    const shares = (await readContract(config, {
+      address: YIELD_VAULT_ADDRESS,
+      abi: yieldVaultAbi,
+      functionName: "balanceOf",
+      args: [address],
+    })) as bigint;
 
-    const fetchVaultBalance = async () => {
-      try {
-        console.log("Fetching vault balance");
-        const balance = await readContract(config, {
-          address: YIELD_VAULT_ADDRESS,
-          abi: yieldVaultAbi,
-          functionName: "balanceOf",
-          args: [address],
-        }) as bigint;
-        setVaultBalance(formatUnits(balance, 18));
-        console.log("Vault Balance:", balance);
-      }
-      catch (err) {
-        console.error(err);
-      }
+    console.log("Vault Shares:", formatUnits(shares, 18));
+    setShare(formatUnits(shares, 18));
+
+    // Convert shares to underlying assets
+    const underlyingAssets = (await readContract(config, {
+      address: YIELD_VAULT_ADDRESS,
+      abi: yieldVaultAbi,
+      functionName: "convertToAssets",
+      args: [shares],
+    })) as bigint;
+
+    if (mounted) {
+      // Display the actual asset value (converted from shares)
+      setVaultBalance(formatUnits(underlyingAssets, 18));
+      console.log("Total Assets in Vault:", formatUnits(underlyingAssets, 18));
     }
+  } catch (err) {
+    console.error("Error fetching vault balance:", err);
+    if (mounted) setVaultBalance("0");
+  }
+};
     
     const fetchClaimed = async () => {
       try {
@@ -304,10 +322,10 @@ const withdrawFromVault = async () => {
               <div className="w-10 h-10 bg-amber-900/30 rounded-lg flex items-center justify-center border border-amber-700/50">
                 <Gift className="w-5 h-5 text-amber-400" />
               </div>
-              <p className="text-sm text-gray-400">APY</p>
+              <p className="text-sm text-gray-400">Shares</p>
             </div>
-            <p className="text-3xl font-bold text-white mb-1">12.5%</p>
-            <p className="text-sm text-gray-500">Annual Yield</p>
+            <p className="text-3xl font-bold text-white mb-1">{parseFloat(share).toFixed(2)}</p>
+            <p className="text-sm text-gray-500">Share hold</p>
           </div>
         </div>
 

@@ -45,15 +45,9 @@ contract YieldVault is ERC4626, Ownable, ReentrancyGuard, Pausable {
     event FeeRecipientUpdated(address indexed newRecipient);
     event EmergencyWithdraw(uint256 amount);
 
-    /**
-     * @notice Initialize the vault
-     * @param _asset Underlying asset (vETH)
-     * @param _strategyManager Strategy manager address
-     */
-    constructor(
-        IERC20 _asset,
-        address _strategyManager
-    ) ERC4626(_asset) ERC20("Yield Vault Token", "yvETH") Ownable(msg.sender) {
+   
+
+    constructor(IERC20 _asset, address _strategyManager) ERC4626(_asset) ERC20("Insight", "INSIGH") Ownable(msg.sender) {
         require(_strategyManager != address(0), "YieldVault: Invalid strategy manager");
 
         strategyManager = StrategyManager(_strategyManager);
@@ -61,10 +55,7 @@ contract YieldVault is ERC4626, Ownable, ReentrancyGuard, Pausable {
         lastRebalance = block.timestamp;
     }
 
-    // ============================================================================
-    // Deposit & Withdrawal
-    // ============================================================================
-
+   
     function deposit(uint256 assets, address receiver)
         public
         override
